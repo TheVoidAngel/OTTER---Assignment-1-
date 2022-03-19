@@ -68,17 +68,80 @@
 #include "Graphics/Textures/Texture3D.h"
 #include "Graphics/Textures/Texture1D.h"
 
+#include "RenderLayer.h"
+
 DefaultSceneLayer::DefaultSceneLayer() :
 	ApplicationLayer()
 {
 	Name = "Default Scene";
-	Overrides = AppLayerFunctions::OnAppLoad;
+	Overrides = AppLayerFunctions::OnAppLoad | AppLayerFunctions::OnUpdate;
 }
 
 DefaultSceneLayer::~DefaultSceneLayer() = default;
 
 void DefaultSceneLayer::OnAppLoad(const nlohmann::json& config) {
 	_CreateScene();
+}
+
+void DefaultSceneLayer::OnUpdate() {
+
+	Application& app = Application::Get();
+	Gameplay::Scene::Sptr sccene = app.CurrentScene();
+	RenderLayer::Sptr render = app.GetLayer<RenderLayer>();
+	RenderFlags flag = render->GetRenderFlags();
+	bool colorcorrect = *(flag & RenderFlags::EnableColorCorrection);
+
+	if (InputEngine::GetKeyState(GLFW_KEY_8) == ButtonState::Pressed) {
+		if (!warmed) {
+			sccene->SetColorLUT(warmlut);
+			colorcorrect = true;
+			warmed = true;
+			cooled = false;
+			greened = false;
+		}
+		else {
+			colorcorrect = false;
+			warmed = false;
+			cooled = false;
+			greened = false;
+		}
+		flag = (flag & ~*RenderFlags::EnableColorCorrection) | (colorcorrect ? RenderFlags::EnableColorCorrection : RenderFlags::None);
+		render->SetRenderFlags(flag);
+	}
+	if (InputEngine::GetKeyState(GLFW_KEY_9) == ButtonState::Pressed) {
+		if (!cooled) {
+			sccene->SetColorLUT(coollut);
+			colorcorrect = true;
+			warmed = false;
+			cooled = true;
+			greened = false;
+		}
+		else {
+			colorcorrect = false;
+			warmed = false;
+			cooled = false;
+			greened = false;
+		}
+		flag = (flag & ~*RenderFlags::EnableColorCorrection) | (colorcorrect ? RenderFlags::EnableColorCorrection : RenderFlags::None);
+		render->SetRenderFlags(flag);
+	}
+	if (InputEngine::GetKeyState(GLFW_KEY_0) == ButtonState::Pressed) {
+		if (!greened) {
+			sccene->SetColorLUT(greenlut);
+			colorcorrect = true;
+			warmed = false;
+			cooled = false;
+			greened = true;
+		}
+		else {
+			colorcorrect = false;
+			warmed = false;
+			cooled = false;
+			greened = false;
+		}
+		flag = (flag & ~*RenderFlags::EnableColorCorrection) | (colorcorrect ? RenderFlags::EnableColorCorrection : RenderFlags::None);
+		render->SetRenderFlags(flag);
+	}
 }
 
 void DefaultSceneLayer::_CreateScene()
@@ -114,6 +177,30 @@ void DefaultSceneLayer::_CreateScene()
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/textured_specular.glsl" }
 		});
 		specShader->SetDebugName("Textured-Specular");
+
+		ShaderProgram::Sptr otherspecShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
+			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_spec.glsl" }
+		});
+		otherspecShader->SetDebugName("Wonky Specular");
+
+		ShaderProgram::Sptr ambspecShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
+			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_spec_amb.glsl" }
+		});
+		ambspecShader->SetDebugName("AMB Specular");
+
+		ShaderProgram::Sptr ambspectoonShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
+			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_mytoon.glsl" }
+		});
+		ambspectoonShader->SetDebugName("AMB Specular toon");
+
+		ShaderProgram::Sptr ambShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
+			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_ambient.glsl" }
+		});
+		ambShader->SetDebugName("AMB");
 
 		// This shader handles our foliage vertex shader example
 		ShaderProgram::Sptr foliageShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
@@ -182,8 +269,8 @@ void DefaultSceneLayer::_CreateScene()
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/skybox_vert.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/skybox_frag.glsl" }
 		});
-
-		// Create an empty scene
+		 
+		// Create an empty scene   
 		Scene::Sptr scene = std::make_shared<Scene>(); 
 
 		// Setting up our enviroment map
@@ -193,56 +280,79 @@ void DefaultSceneLayer::_CreateScene()
 		scene->SetSkyboxRotation(glm::rotate(MAT4_IDENTITY, glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)));
 
 		// Loading in a color lookup table
-		Texture3D::Sptr lut = ResourceManager::CreateAsset<Texture3D>("luts/Not as cool.CUBE");
-		Texture3D::Sptr warmlut = ResourceManager::CreateAsset<Texture3D>("luts/Midtone.CUBE");
-		Texture3D::Sptr coollut = ResourceManager::CreateAsset<Texture3D>("luts/cool.CUBE");
-		Texture3D::Sptr greenlut = ResourceManager::CreateAsset<Texture3D>("luts/Deepseagreen.CUBE");
+		lut = ResourceManager::CreateAsset<Texture3D>("luts/Not as cool.CUBE");
+		warmlut = ResourceManager::CreateAsset<Texture3D>("luts/Midtone.CUBE");
+		coollut = ResourceManager::CreateAsset<Texture3D>("luts/cool.CUBE");
+		greenlut = ResourceManager::CreateAsset<Texture3D>("luts/Deepseagreen.CUBE");
 		// Configure the color correction LUT
 		scene->SetColorLUT(lut);
+		
+		
 
 		// Create our materials
 		// This will be our box material, with no environment reflections
 		Material::Sptr boxMaterial = ResourceManager::CreateAsset<Material>(basicShader);
 		{
 			boxMaterial->Name = "Box";
-			boxMaterial->Set("u_Material.Diffuse", boxTexture);
+			boxMaterial->Set("u_Material.Diffuse", boxTexture); 
 			boxMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
-		Material::Sptr bookMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		Material::Sptr bookMaterial = ResourceManager::CreateAsset<Material>(ambspectoonShader);
 		{
 			bookMaterial->Name = "Book";
 			bookMaterial->Set("u_Material.Diffuse", booktex);
+			bookMaterial->Set("u_Material.Specular", booktex);
 			bookMaterial->Set("u_Material.Shininess", 0.1f);
+
+
+			bookMaterial->Set("s_ToonTerm", toonLut);
+			bookMaterial->Set("u_Material.Steps", 8);
 		}
 
-		Material::Sptr desktopMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		Material::Sptr desktopMaterial = ResourceManager::CreateAsset<Material>(ambspectoonShader);
 		{
 			desktopMaterial->Name = "Desktop";
 			desktopMaterial->Set("u_Material.Diffuse", desktoptex);
+			desktopMaterial->Set("u_Material.Specular", desktoptex);
 			desktopMaterial->Set("u_Material.Shininess", 0.1f);
+			
+
+			desktopMaterial->Set("s_ToonTerm", toonLut);
+			desktopMaterial->Set("u_Material.Steps", 8);
 		}
 
-		Material::Sptr mirrorMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		Material::Sptr mirrorMaterial = ResourceManager::CreateAsset<Material>(ambspectoonShader);
 		{
 			mirrorMaterial->Name = "Mirror";
 			mirrorMaterial->Set("u_Material.Diffuse", mirrortex);
+			mirrorMaterial->Set("u_Material.Specular", mirrortex);
 			mirrorMaterial->Set("u_Material.Shininess", 0.1f);
+
+			mirrorMaterial->Set("s_ToonTerm", toonLut);
+			mirrorMaterial->Set("u_Material.Steps", 8);
 		}
 
-		Material::Sptr chairMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		Material::Sptr chairMaterial = ResourceManager::CreateAsset<Material>(ambspectoonShader);
 		{
 			chairMaterial->Name = "Chair";
 			chairMaterial->Set("u_Material.Diffuse", chairtex);
+			chairMaterial->Set("u_Material.Specular", chairtex);
 			chairMaterial->Set("u_Material.Shininess", 0.1f);
+
+			chairMaterial->Set("s_ToonTerm", toonLut);
+			chairMaterial->Set("u_Material.Steps", 8);
 		}
 
-		// This will be the reflective material, we'll make the whole thing 90% reflective
-		Material::Sptr monkeyMaterial = ResourceManager::CreateAsset<Material>(reflectiveShader);
+		Material::Sptr monkeyMaterial = ResourceManager::CreateAsset<Material>(ambspectoonShader);
 		{
 			monkeyMaterial->Name = "Monkey";
 			monkeyMaterial->Set("u_Material.Diffuse", monkeyTex);
+			monkeyMaterial->Set("u_Material.Specular", monkeyTex);
 			monkeyMaterial->Set("u_Material.Shininess", 0.5f);
+
+			monkeyMaterial->Set("s_ToonTerm", toonLut); 
+			monkeyMaterial->Set("u_Material.Steps", 8);
 		}
 
 		// This will be the reflective material, we'll make the whole thing 90% reflective
@@ -349,19 +459,6 @@ void DefaultSceneLayer::_CreateScene()
 			//Camera::Sptr cam = camera->Add<Camera>();
 			// Make sure that the camera is set as the scene's main camera!
 			//scene->MainCamera = cam;
-		}
-
-		GameObject::Sptr colormanager = scene->CreateGameObject("Colormanager"); 
-		{
-			if (InputEngine::GetKeyState(GLFW_KEY_8) == ButtonState::Pressed) {
-				scene->SetColorLUT(warmlut);
-			}
-			else if (InputEngine::GetKeyState(GLFW_KEY_9) == ButtonState::Pressed) {
-				scene->SetColorLUT(coollut);
-			}
-			else if (InputEngine::GetKeyState(GLFW_KEY_0) == ButtonState::Pressed) {
-				scene->SetColorLUT(greenlut);
-			}
 		}
 
 		// Set up all our sample objects

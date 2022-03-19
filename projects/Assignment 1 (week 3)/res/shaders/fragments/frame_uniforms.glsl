@@ -27,6 +27,14 @@ layout (std140, binding = 1) uniform b_InstanceLevelUniforms {
 };
 
 #define FLAG_ENABLE_COLOR_CORRECTION (1 << 0)
+#define FLAG_ENABLE_AMBIENT (1 << 1)
+#define FLAG_ENABLE_SPECULAR (1 << 2)
+#define FLAG_ENABLE_AMBIENTSPECULAR (1 << 3)
+#define FLAG_ENABLE_AMBIENTSPECULARTOON (1 << 4)
+#define FLAG_ENABLE_WARMLUT (1 << 5)
+#define FLAG_ENABLE_COOLLUT (1 << 6)
+#define FLAG_ENABLE_GREENLUT (1 << 7)
+
 
 bool IsFlagSet(uint flag) {
     return (u_Flags & flag) != 0;

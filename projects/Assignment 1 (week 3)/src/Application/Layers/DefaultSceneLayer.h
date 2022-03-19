@@ -1,5 +1,6 @@
 #pragma once
 #include "Application/ApplicationLayer.h"
+#include "Gameplay/Scene.h"
 #include "json.hpp"
 
 /**
@@ -16,6 +17,16 @@ public:
 	// Inherited from ApplicationLayer
 
 	virtual void OnAppLoad(const nlohmann::json& config) override;
+	virtual void OnUpdate() override;
+
+	bool warmed = false;
+	bool cooled = false;
+	bool greened = false;
+
+	Texture3D::Sptr lut;
+	Texture3D::Sptr warmlut;
+	Texture3D::Sptr coollut;
+	Texture3D::Sptr greenlut;
 
 protected:
 	void _CreateScene();

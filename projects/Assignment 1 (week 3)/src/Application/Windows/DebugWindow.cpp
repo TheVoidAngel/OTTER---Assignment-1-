@@ -29,9 +29,36 @@ void DebugWindow::RenderMenuBar()
 	RenderFlags flags = renderLayer->GetRenderFlags();
 	bool changed = false;
 	bool temp = *(flags & RenderFlags::EnableColorCorrection);
+	bool temp1 = *(flags & RenderFlags::EnableAmbient);
+	bool temp2 = *(flags & RenderFlags::EnableSpecular);
+	bool temp3 = *(flags & RenderFlags::EnableAmbientSpecular);
+	bool temp4 = *(flags & RenderFlags::EnableAmbientSpecularToon);
+
+
+
 	if (ImGui::Checkbox("Enable Color Correction", &temp)) {
 		changed = true;
 		flags = (flags & ~*RenderFlags::EnableColorCorrection) | (temp ? RenderFlags::EnableColorCorrection : RenderFlags::None);
+	}
+
+	if (ImGui::Checkbox("Enable Ambient", &temp1)) {
+		changed = true;
+		flags = (flags & ~*RenderFlags::EnableAmbient) | (temp1 ? RenderFlags::EnableAmbient : RenderFlags::None);
+	}
+
+	if (ImGui::Checkbox("Enable Specular", &temp2)) {
+		changed = true;
+		flags = (flags & ~*RenderFlags::EnableSpecular) | (temp2 ? RenderFlags::EnableSpecular : RenderFlags::None);
+	}
+
+	if (ImGui::Checkbox("Enable Ambient and Specular", &temp3)) {
+		changed = true;
+		flags = (flags & ~*RenderFlags::EnableAmbientSpecular) | (temp3 ? RenderFlags::EnableAmbientSpecular : RenderFlags::None);
+	}
+
+	if (ImGui::Checkbox("Enable All + diffuse and toon", &temp4)) {
+		changed = true;
+		flags = (flags & ~*RenderFlags::EnableAmbientSpecularToon) | (temp4 ? RenderFlags::EnableAmbientSpecularToon : RenderFlags::None);
 	}
 
 	if (changed) {
