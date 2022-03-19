@@ -38,12 +38,14 @@ uniform sampler1D s_ToonTerm;
 
 // https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
 void main() {
+	//set variables
 	float amb = 0.1;
 	float specstr = 0.6;
 
 	// Normalize our input normal
 	vec3 normal = normalize(inNormal);
 
+	//find the power of the specular acording to the materials
 	float specPower = texture(u_Material.Specular, inUV).r;
 	
 	vec3 toEye = normalize(u_CamPos.xyz - inWorldPos);
@@ -52,8 +54,10 @@ void main() {
 	// Get the albedo from the diffuse / albedo map
 	vec4 textureColor = texture(u_Material.Diffuse, inUV);
 
+	//find the specular reflection towards the camera 
 	float specular = pow(max(dot(toEye, environmentDir), 0.0), 32);
 
+	//calculate the diffuse lighting
 	vec3 lightAccumulation = CalcAllLightContribution(inWorldPos, normal, u_CamPos.xyz, u_Material.Shininess);
 
 
@@ -61,21 +65,26 @@ void main() {
 
 	vec3 result = vec3 (0);
 
+	// set flag for ambient
     if (IsFlagSet(FLAG_ENABLE_AMBIENT)) {
         result = amb * textureColor.rgb;
     }
     
+	// set flag for specular
     if (IsFlagSet(FLAG_ENABLE_SPECULAR)) {
         result = (specstr * specular) * textureColor.rgb;
     }
 
+	// set flag for ambient + specular
 	if (IsFlagSet(FLAG_ENABLE_AMBIENTSPECULAR)) {
         result = ((specstr * specular) + amb) * textureColor.rgb;
     }
 
+	// set flag for ambient + specular + diffuse + toon
 	if (IsFlagSet(FLAG_ENABLE_AMBIENTSPECULARTOON)) {
         result = ((specstr * specular) + amb + (lightAccumulation  * inColor)) * textureColor.rgb;
 
+		// to add toon we have to warp the results rgb values in accordince with the toonterm
 		result.r = texture(s_ToonTerm, result.r).r;
 		result.g = texture(s_ToonTerm, result.g).g;
 		result.b = texture(s_ToonTerm, result.b).b;

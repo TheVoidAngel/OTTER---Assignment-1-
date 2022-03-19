@@ -4,6 +4,7 @@
 #include "Graphics/Buffers/UniformBuffer.h"
 
 ENUM_FLAGS(RenderFlags, uint32_t,
+	//add all planned shader changes
 	None = 0,
 	EnableColorCorrection = 1 << 0,
 	EnableAmbient = 1 << 1,

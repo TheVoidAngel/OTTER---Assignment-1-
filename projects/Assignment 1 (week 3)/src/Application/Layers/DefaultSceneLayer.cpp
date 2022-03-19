@@ -83,16 +83,21 @@ void DefaultSceneLayer::OnAppLoad(const nlohmann::json& config) {
 	_CreateScene();
 }
 
+//created an update function to allow for toggling between luts
 void DefaultSceneLayer::OnUpdate() {
 
 	Application& app = Application::Get();
+	// set the scene, renderer, flags so that I could set and activate each lut similarly to how i worked with the lighting in debugwindow
 	Gameplay::Scene::Sptr sccene = app.CurrentScene();
 	RenderLayer::Sptr render = app.GetLayer<RenderLayer>();
 	RenderFlags flag = render->GetRenderFlags();
+	//set to enable color correction so that each lut is visible
 	bool colorcorrect = *(flag & RenderFlags::EnableColorCorrection);
 
+	//set key states so that by pressing a key the lut will swap
 	if (InputEngine::GetKeyState(GLFW_KEY_8) == ButtonState::Pressed) {
 		if (!warmed) {
+			//set the warm lut to the scene
 			sccene->SetColorLUT(warmlut);
 			colorcorrect = true;
 			warmed = true;
@@ -110,6 +115,7 @@ void DefaultSceneLayer::OnUpdate() {
 	}
 	if (InputEngine::GetKeyState(GLFW_KEY_9) == ButtonState::Pressed) {
 		if (!cooled) {
+			//set the cool lut to the scene
 			sccene->SetColorLUT(coollut);
 			colorcorrect = true;
 			warmed = false;
@@ -127,6 +133,7 @@ void DefaultSceneLayer::OnUpdate() {
 	}
 	if (InputEngine::GetKeyState(GLFW_KEY_0) == ButtonState::Pressed) {
 		if (!greened) {
+			//set the green lut to the scene
 			sccene->SetColorLUT(greenlut);
 			colorcorrect = true;
 			warmed = false;
@@ -178,24 +185,28 @@ void DefaultSceneLayer::_CreateScene()
 		});
 		specShader->SetDebugName("Textured-Specular");
 
+		//set up the solely specular shader
 		ShaderProgram::Sptr otherspecShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_spec.glsl" }
 		});
 		otherspecShader->SetDebugName("Wonky Specular");
 
+		//set up the ambient + spec
 		ShaderProgram::Sptr ambspecShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_spec_amb.glsl" }
 		});
 		ambspecShader->SetDebugName("AMB Specular");
 
+		//set up the ambient + specular + toon + diffuse shader
 		ShaderProgram::Sptr ambspectoonShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_mytoon.glsl" }
 		});
 		ambspectoonShader->SetDebugName("AMB Specular toon");
 
+		//this handles the ambient shading
 		ShaderProgram::Sptr ambShader = ResourceManager::CreateAsset<ShaderProgram>(std::unordered_map<ShaderPartType, std::string>{
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_ambient.glsl" }
@@ -492,6 +503,7 @@ void DefaultSceneLayer::_CreateScene()
 			renderer->SetMesh(monkeyMesh);
 			renderer->SetMaterial(monkeyMaterial);
 
+			//set rotation behaviour to the monkey
 			RotatingBehaviour::Sptr behaviour = monkey1->Add<RotatingBehaviour>();
 			behaviour->RotationSpeed = glm::vec3(0.0f, 0.0f, -90.0f);
 

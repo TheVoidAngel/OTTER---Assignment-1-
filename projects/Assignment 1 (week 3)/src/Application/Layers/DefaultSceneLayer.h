@@ -17,7 +17,12 @@ public:
 	// Inherited from ApplicationLayer
 
 	virtual void OnAppLoad(const nlohmann::json& config) override;
+
+	//activated onupdate so that I could toggle my luts in default layer easily
+
 	virtual void OnUpdate() override;
+
+	// set global variables so that I could take the initialized lut from the scene cration and use it to toggle in the update function
 
 	bool warmed = false;
 	bool cooled = false;

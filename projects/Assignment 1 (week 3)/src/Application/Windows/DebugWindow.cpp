@@ -28,6 +28,7 @@ void DebugWindow::RenderMenuBar()
 
 	RenderFlags flags = renderLayer->GetRenderFlags();
 	bool changed = false;
+	//I had to set multiple temp bools so each toggle had their own
 	bool temp = *(flags & RenderFlags::EnableColorCorrection);
 	bool temp1 = *(flags & RenderFlags::EnableAmbient);
 	bool temp2 = *(flags & RenderFlags::EnableSpecular);
@@ -41,6 +42,7 @@ void DebugWindow::RenderMenuBar()
 		flags = (flags & ~*RenderFlags::EnableColorCorrection) | (temp ? RenderFlags::EnableColorCorrection : RenderFlags::None);
 	}
 
+	// This allows me to use the debug feture to activate my lighting as it partains to each object in the scene
 	if (ImGui::Checkbox("Enable Ambient", &temp1)) {
 		changed = true;
 		flags = (flags & ~*RenderFlags::EnableAmbient) | (temp1 ? RenderFlags::EnableAmbient : RenderFlags::None);
